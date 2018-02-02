@@ -1,0 +1,27 @@
+{
+  "name": "explodingimages",
+  "version": "1.0.0",
+  "description": "Using JavaScript and some CSS to give the illusion that an image is braking apart. In a firework pattern.",
+  "main": "FireworksPics.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scirelli/explodingImages.git"
+  },
+  "keywords": [
+    "javascript",
+    "fireworks",
+    "css"
+  ],
+  "author": "Steve Cirelli",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/scirelli/explodingImages/issues"
+  },
+  "homepage": "https://github.com/scirelli/explodingImages#readme"
+}

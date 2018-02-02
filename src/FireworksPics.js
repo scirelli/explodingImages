@@ -1,11 +1,4 @@
-/** *****************************************************************************************************
-* Author: 
-* File Desc: 
-* Requires: q.js
-******************************************************************************************************* */
-if( scUtils === undefined ) { var scUtils = {}; }
-
-!function(scUtils){
+var FireworkPics = (function(window, Promise){
 'use strict';
     var IMAGE_PARTICLES_WIDE = 20;//Should be an even number.
     var IMAGE_PARTICLES_HIGH = 20;//Should be an even number.
@@ -18,8 +11,9 @@ if( scUtils === undefined ) { var scUtils = {}; }
     var MIN_FADE_RATE        = 0.1;//op/s
     var MAX_FADE_RATE        = 0.15;//opacity/s
     var div                  = document.createElement('div');
+    var MAX_IMG_LOAD_TIME    = 60*1000;//ms
 
-    scUtils.FireworkPics = function( oElm, aImgs, nRows, nCols ){
+    FireworkPics = function( oElm, aImgs, nRows, nCols ){
         this.aImgs = [];
         this.nImageRows = 0;//Based on particles
         this.nImageCols = 0;
@@ -28,15 +22,14 @@ if( scUtils === undefined ) { var scUtils = {}; }
         this.setImageRows(nRows || IMAGE_PARTICLES_WIDE);
         this.setImageCols(nCols || IMAGE_PARTICLES_HIGH);
 
-        this.oImgLoadedPromise = Q.defer();
-        this.oImgLoadedPromise.reject([]);
+        this.oImgLoadedPromise = Promise.reject([]);
         this.oImgLoadedPromise = null;//this.oImgLoadedPromise.promise;
 
         if( aImgs ){
             this.setImages(aImgs);
         }
     };
-    scUtils.FireworkPics.prototype = {
+    FireworkPics.prototype = {
         init:function(){
             this.attachCommonStyles();
             this.oImgLoadedPromise = this.retrieveImages();
@@ -169,7 +162,7 @@ if( scUtils === undefined ) { var scUtils = {}; }
             this.oElm = oElm;
         },
         addImage:function( oImg ){
-            if( oImg instanceof scUtils.FireworkPics.Image ){
+            if( oImg instanceof FireworkPics.Image ){
                 this.aImgs.push( oImg );
             }else{
                 console.warn( 'Could not add image' + oImg );
@@ -186,7 +179,7 @@ if( scUtils === undefined ) { var scUtils = {}; }
                 for( var i=0, l=aImgs.length; i<l; i++ ){
                     this.addImage(aImgs[i]);
                 }
-            }else if( aImgs instanceof scUtils.FireworkPics.Image ){
+            }else if( aImgs instanceof FireworkPics.Image ){
                 this.addImage(aImgs);
             }else{
                 console.warn( 'Could not set image' + aImgs );
@@ -324,7 +317,7 @@ if( scUtils === undefined ) { var scUtils = {}; }
                 oImg = a[i];
                 aPromises.push(oImg.retrieveImageData());
             }
-            return Q.allSettled(aPromises).then(function(aImgs){
+            return Promise.all(aPromises).then(function(aImgs){
                     me.clearImages();
                     //Keep only the images that didn't fail.
                     for( var i=0,l=aImgs.length; i<l; i++ ){
@@ -340,12 +333,13 @@ if( scUtils === undefined ) { var scUtils = {}; }
             });
         }
     };
-    scUtils.FireworkPics.Image = function( sImgURL, nWidth, nHeight ){
+
+    FireworkPics.Image = function( sImgURL, nWidth, nHeight ){
         this.setURL(sImgURL);
         this.setWidth(nWidth || 0);
         this.setHeight(nHeight || 0);
     };
-    scUtils.FireworkPics.Image.prototype = {
+    FireworkPics.Image.prototype = {
         setURL:function( sURL ){
             this.sURL = sURL;
             return this;
@@ -369,15 +363,21 @@ if( scUtils === undefined ) { var scUtils = {}; }
         },
         retrieveImageData:function(){
             var oImg = document.createElement('img'),
-                me   = this,
-                deferred = Q.defer();
-            oImg.addEventListener('load',function(e){
-                me.setWidth(this.width);
-                me.setHeight(this.height);
-                deferred.resolve(me);
+                me   = this;
+
+            return new Promise(function(resolve, reject) {
+                var timeoutId = 0;
+
+                oImg.addEventListener('load',function(e){
+                    window.clearTimeout(timeoutId);
+                    me.setWidth(this.width);
+                    me.setHeight(this.height);
+                    resolve(me);
+                });
+                oImg.src = this.sURL;
+
+                timeoutId = setTimeout(reject, MAX_IMG_LOAD_TIME);
             });
-            oImg.src = this.sURL;
-            return deferred.promise;
         }
     };
-}(scUtils);
+})(window, window.Promise);

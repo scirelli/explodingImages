@@ -5,7 +5,7 @@
 
 if( scUtils === undefined ) var scUtils = new Object();
 
-;!function( scUtils ){
+;!function(scUtils){
 "use strict";
     scUtils.MimeType = function( sName, sMimeType, sFileExtension, sDetails ){
         this.sName          = sName;

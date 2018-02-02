@@ -1,16 +1,14 @@
-if( scUtils === undefined ){ var scUtils = {}; }
-
-!function(scUtils){
+var BindKeys = (function(window){
 "use strict";
     var DELAY_DEFAULT = 500,
         WAIT_TIME     = DELAY_DEFAULT + 100;//Time to wait till key press queue is reset.
 
-    scUtils.BindKeys = function( oElm, nTimeMS ){
+    BindKeys = function( oElm, nTimeMS ){
         this.setElement(oElm);
         this.nTimeMS = parseInt(nTimeMS) || DELAY_DEFAULT;
     }
 
-    scUtils.BindKeys.prototype = {
+    BindKeys.prototype = {
         bindCharsToKeyPresses:function( sChars, fCallBack, aParams, context ){
         "use strict";
             var aKeyTimes = [],
@@ -73,4 +71,4 @@ if( scUtils === undefined ){ var scUtils = {}; }
             }
         }
     }
-}(scUtils);
+})(window);
