@@ -12,8 +12,8 @@ var FireworkPics = (function(window, Promise){
     var MAX_FADE_RATE        = 0.15;//opacity/s
     var div                  = document.createElement('div');
     var MAX_IMG_LOAD_TIME    = 60*1000;//ms
-
-    FireworkPics = function( oElm, aImgs, nRows, nCols ){
+    
+    function FireworkPics( oElm, aImgs, nRows, nCols ){
         this.aImgs = [];
         this.nImageRows = 0;//Based on particles
         this.nImageCols = 0;
@@ -22,8 +22,8 @@ var FireworkPics = (function(window, Promise){
         this.setImageRows(nRows || IMAGE_PARTICLES_WIDE);
         this.setImageCols(nCols || IMAGE_PARTICLES_HIGH);
 
-        this.oImgLoadedPromise = Promise.reject([]);
-        this.oImgLoadedPromise = null;//this.oImgLoadedPromise.promise;
+        this.oImgLoadedPromise = Promise.reject([]).catch(function(){});
+        //this.oImgLoadedPromise = null;//this.oImgLoadedPromise.promise;
 
         if( aImgs ){
             this.setImages(aImgs);
@@ -35,15 +35,18 @@ var FireworkPics = (function(window, Promise){
             this.oImgLoadedPromise = this.retrieveImages();
         },
         start:function(){
-            var me = this;
+            var self = this;
 
             this.oImgLoadedPromise.then(function( aImgs ){
-                    me.bRunning = true;
-                    me.chooseImage();
+                    self.bRunning = true;
+                    self.chooseImage();
                 },
                 function(aFail){
-                    me.bRunning = false;
-                    debugger;
+                    self.bRunning = false;
+                    return self.oImgLoadedPromise = self.retrieveImages()
+                        .then(function(){
+                            return self.start();
+                        });
                 }
             );
         },
@@ -81,7 +84,7 @@ var FireworkPics = (function(window, Promise){
         animateDivs:function( oAnimate ){
             var nNow          = window.performance.now(),
                 nTotalTime    = nNow - oAnimate.nStartTime,
-                me            = this,
+                self            = this,
                 aFrameTimes   = oAnimate.aFrameTimes,
                 nAvgFrameTime = 1000,
                 nBufsz        = oAnimate.nFrameTimeBufferSz,
@@ -121,7 +124,7 @@ var FireworkPics = (function(window, Promise){
                 }
                 if( oAnimate.nCompleteCount < oAnimate.aDivs.length ){
                     setTimeout(function(){
-                        me.animateDivs(oAnimate);
+                        self.animateDivs(oAnimate);
                     },10);
                 }else{
                     this.deleteImageDivs(oAnimate);
@@ -311,26 +314,35 @@ var FireworkPics = (function(window, Promise){
         //@return: promise.
         retrieveImages:function(){
             var aPromises = [],
-                me        = this;
+                self        = this;
 
-            for( var i=0,a=this.aImgs,l=a.length,oImg=null; i<l; i++ ){
+            for( var i=0,a=self.aImgs,l=a.length,oImg=null; i<l; i++ ){
                 oImg = a[i];
                 aPromises.push(oImg.retrieveImageData());
             }
-            return Promise.all(aPromises).then(function(aImgs){
-                    me.clearImages();
+
+            if(!aPromises.length) return Promise.reject('Nothing to retrieve');
+
+            return Promise.all(aPromises)
+                .then(function(aImgs){
+                    self.clearImages();
                     //Keep only the images that didn't fail.
                     for( var i=0,l=aImgs.length; i<l; i++ ){
                         oImg = aImgs[i];
-                        if( oImg.state == 'fulfilled' ){
-                            me.addImage(oImg.value);
+                        if( oImg instanceof FireworkPics.Image ){
+                            self.addImage(oImg);
                         }
                     }
-                return aImgs;
-            },
-            function(fail){
-                debugger;
-            });
+                    return aImgs;
+                }).catch(function(failObj){
+                    var failedIndex = self.aImgs.indexOf(failObj.img);
+
+                    self.aImgs.splice(failedIndex, 1);
+                    debugger;
+                    if(!self.aImgs.length){
+                        throw new Error('Could not load images');
+                    }
+                });
         }
     };
 
@@ -363,21 +375,29 @@ var FireworkPics = (function(window, Promise){
         },
         retrieveImageData:function(){
             var oImg = document.createElement('img'),
-                me   = this;
+                self   = this;
 
             return new Promise(function(resolve, reject) {
                 var timeoutId = 0;
 
                 oImg.addEventListener('load',function(e){
                     window.clearTimeout(timeoutId);
-                    me.setWidth(this.width);
-                    me.setHeight(this.height);
-                    resolve(me);
+                    self.setWidth(this.width);
+                    self.setHeight(this.height);
+                    resolve(self);
                 });
-                oImg.src = this.sURL;
+                oImg.addEventListener('error', function(e){
+                    window.clearTimeout(timeoutId);
+                    reject({error:'Could not load image', img:self, imgElm:oImg});
+                });
+                oImg.src = self.sURL;
 
-                timeoutId = setTimeout(reject, MAX_IMG_LOAD_TIME);
+                timeoutId = setTimeout(function(){
+                    reject({error:'Image took to long to load.', img:self, imgElm:oImg});
+                }, MAX_IMG_LOAD_TIME);
             });
         }
     };
+
+    return FireworkPics;
 })(window, window.Promise);

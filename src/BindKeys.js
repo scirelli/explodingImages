@@ -3,7 +3,7 @@ var BindKeys = (function(window){
     var DELAY_DEFAULT = 500,
         WAIT_TIME     = DELAY_DEFAULT + 100;//Time to wait till key press queue is reset.
 
-    BindKeys = function( oElm, nTimeMS ){
+    function BindKeys( oElm, nTimeMS ){
         this.setElement(oElm);
         this.nTimeMS = parseInt(nTimeMS) || DELAY_DEFAULT;
     }
@@ -71,4 +71,6 @@ var BindKeys = (function(window){
             }
         }
     }
+
+    return BindKeys;
 })(window);
