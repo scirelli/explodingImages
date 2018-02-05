@@ -22,6 +22,18 @@ if(!Math.rndRange)
         return Math.random()*(max-min)+min;
     }
 
+//------------------------------------------------
+// Generates a random number using Math.random()
+// in the given range between min and max.
+// @param: min - Integer; lower bounds
+// @param: max - Integer; upper bounds
+// @return: a random number between min and max
+//------------------------------------------------
+if(!Math.rndRangeInt)
+    Math.rndRangeInt = function ( min, max ){
+        if( isNaN(min) || isNaN(max) ) return NaN;
+        return ~~(Math.random()*(max-min)+min);
+    }
 
 //------------------------------------------------
 // Converts a byte to a hex number.

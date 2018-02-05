@@ -1,4 +1,4 @@
-Exploding Images
+Particlize Images
 ================
 
-Use Javascript and HTML/CSS to explode an image.
+Use Javascript and HTML/CSS to "chop up" an image so the parts can be animated.

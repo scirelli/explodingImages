@@ -50,16 +50,35 @@ function startExplode( e ){
         oDiv      = null,
         aImgs     = [],
         fw        = null,
-        tmp       = getURLs();
+        tmp       = getURLs(),
+        radioAlgs = document.body.querySelectorAll('input[name="algorithm"]'),
+        algorithm = 'FireworkPics';
 
+    Array.prototype.forEach.call(document.body.querySelectorAll('.image-frag'), function(el){
+        el.remove();
+    });
+
+    for(var i=0,l=radioAlgs.length,el=null; i<l; i++){
+        el = radioAlgs[i];
+        if(el.checked){
+            algorithm = el.value || 'FireworkPics';
+            break;
+        }
+    }
     if( tmp.length ){
         a = tmp;
     }
     for( var i=0,l=a.length,url='',oImg=null; i<l; i++ ){
-        oImg = new FireworkPics.Image(a[i]);
+        oImg = new ParticlizeImage(a[i]);
         aImgs.push(oImg);
     }
-    fw = new FireworkPics(null,aImgs)
+
+    switch(algorithm){
+        case 'RotateImage':
+            aImgs = aImgs[Math.rndRangeInt(0, aImgs.length)];
+    }
+
+    fw = new window[algorithm](aImgs)
     fw.init();
     fw.start();
     return false;
